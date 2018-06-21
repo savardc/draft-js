@@ -14,7 +14,6 @@
 
 import type DraftEditor from 'DraftEditor.react';
 
-const DraftFeatureFlags = require('DraftFeatureFlags');
 const DraftModifier = require('DraftModifier');
 const EditorState = require('EditorState');
 const Keys = require('Keys');
@@ -62,11 +61,7 @@ const DraftEditorCompositionHandler = {
    * `compositionend` events that they fire.
    */
   onBeforeInput: function(editor: DraftEditor, e: SyntheticInputEvent<>): void {
-    if (DraftFeatureFlags.draft_enable_composition_fixes) {
-      beforeInputData = (beforeInputData || '') + e.data;
-    } else {
-    textInputData = (textInputData || '') + e.data;
-    }
+    beforeInputData = (beforeInputData || '') + e.data;
   },
 
   /**
@@ -85,9 +80,7 @@ const DraftEditorCompositionHandler = {
     editor: DraftEditor,
     e: SyntheticInputEvent<>,
   ): void {
-    if (DraftFeatureFlags.draft_enable_composition_fixes) {
-      compositionUpdateData = e.data;
-    }
+    compositionUpdateData = e.data;
   },
 
   /**
@@ -108,10 +101,8 @@ const DraftEditorCompositionHandler = {
                              e: SyntheticCompositionEvent<>): void {
     resolved = false;
     stillComposing = false;
-    if (DraftFeatureFlags.draft_enable_composition_fixes) {
-      // Use e.data from the first compositionend event seen
-      compositionEndData = compositionEndData || e.data;
-    }
+    // Use e.data from the first compositionend event seen
+    compositionEndData = compositionEndData || e.data;
     setTimeout(() => {
       if (!resolved) {
         DraftEditorCompositionHandler.resolveComposition(editor, e);
@@ -204,15 +195,10 @@ const DraftEditorCompositionHandler = {
     resolved = true;
 
     let composedChars;
-    if (DraftFeatureFlags.draft_enable_composition_fixes) {
-      composedChars = this.normalizeCompositionInput();
-      beforeInputData = null;
-      compositionUpdateData = null;
-      compositionEndData = null;
-    } else {
-      composedChars = textInputData;
-      textInputData = '';
-    }
+    composedChars = this.normalizeCompositionInput();
+    beforeInputData = null;
+    compositionUpdateData = null;
+    compositionEndData = null;
 
     const editorState = EditorState.set(editor._latestEditorState, {
       inCompositionMode: false,
