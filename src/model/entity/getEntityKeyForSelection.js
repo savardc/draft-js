@@ -6,8 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule getEntityKeyForSelection
- * @typechecks
+ * @format
  * @flow
  */
 
@@ -26,25 +25,29 @@ function getEntityKeyForSelection(
   contentState: ContentState,
   targetSelection: SelectionState,
 ): ?string {
-  var entityKey;
+  let entityKey;
 
   if (targetSelection.isCollapsed()) {
-    var key = targetSelection.getAnchorKey();
-    var offset = targetSelection.getAnchorOffset();
+    const key = targetSelection.getAnchorKey();
+    const offset = targetSelection.getAnchorOffset();
     if (offset > 0) {
       entityKey = contentState.getBlockForKey(key).getEntityAt(offset - 1);
+      if (entityKey !== contentState.getBlockForKey(key).getEntityAt(offset)) {
+        return null;
+      }
       return filterKey(contentState.getEntityMap(), entityKey);
     }
     return null;
   }
 
-  var startKey = targetSelection.getStartKey();
-  var startOffset = targetSelection.getStartOffset();
-  var startBlock = contentState.getBlockForKey(startKey);
+  const startKey = targetSelection.getStartKey();
+  const startOffset = targetSelection.getStartOffset();
+  const startBlock = contentState.getBlockForKey(startKey);
 
-  entityKey = startOffset === startBlock.getLength() ?
-    null :
-    startBlock.getEntityAt(startOffset);
+  entityKey =
+    startOffset === startBlock.getLength()
+      ? null
+      : startBlock.getEntityAt(startOffset);
 
   return filterKey(contentState.getEntityMap(), entityKey);
 }
@@ -53,12 +56,9 @@ function getEntityKeyForSelection(
  * Determine whether an entity key corresponds to a `MUTABLE` entity. If so,
  * return it. If not, return null.
  */
-function filterKey(
-  entityMap: EntityMap,
-  entityKey: ?string,
-): ?string {
+function filterKey(entityMap: EntityMap, entityKey: ?string): ?string {
   if (entityKey) {
-    var entity = entityMap.__get(entityKey);
+    const entity = entityMap.__get(entityKey);
     return entity.getMutability() === 'MUTABLE' ? entityKey : null;
   }
   return null;

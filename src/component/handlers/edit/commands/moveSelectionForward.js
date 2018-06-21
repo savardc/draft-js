@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule moveSelectionForward
- * @flow
+ * @format
+ * @flow strict-local
  */
 
 'use strict';
@@ -27,17 +27,17 @@ function moveSelectionForward(
   editorState: EditorState,
   maxDistance: number,
 ): SelectionState {
-  var selection = editorState.getSelection();
-  var key = selection.getStartKey();
-  var offset = selection.getStartOffset();
-  var content = editorState.getCurrentContent();
+  const selection = editorState.getSelection();
+  const key = selection.getStartKey();
+  const offset = selection.getStartOffset();
+  const content = editorState.getCurrentContent();
 
-  var focusKey = key;
-  var focusOffset;
+  let focusKey = key;
+  let focusOffset;
 
-  var block = content.getBlockForKey(key);
+  const block = content.getBlockForKey(key);
 
-  if (maxDistance > (block.getText().length - offset)) {
+  if (maxDistance > block.getText().length - offset) {
     focusKey = content.getKeyAfter(key);
     focusOffset = 0;
   } else {

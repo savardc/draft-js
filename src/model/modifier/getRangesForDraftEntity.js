@@ -6,17 +6,16 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule getRangesForDraftEntity
- * @typechecks
- * @flow
+ * @format
+ * @flow strict-local
  */
 
 'use strict';
 
-import type ContentBlock from 'ContentBlock';
+import type {BlockNodeRecord} from 'BlockNodeRecord';
 import type {DraftRange} from 'DraftRange';
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
 /**
  * Obtain the start and end positions of the range that has the
@@ -27,10 +26,10 @@ var invariant = require('invariant');
  * the subsequent range.
  */
 function getRangesForDraftEntity(
-  block: ContentBlock,
+  block: BlockNodeRecord,
   key: string,
 ): Array<DraftRange> {
-  var ranges = [];
+  const ranges = [];
   block.findEntityRanges(
     c => c.getEntity() === key,
     (start, end) => {
@@ -38,10 +37,7 @@ function getRangesForDraftEntity(
     },
   );
 
-  invariant(
-    !!ranges.length,
-    'Entity key not found in this range.',
-  );
+  invariant(!!ranges.length, 'Entity key not found in this range.');
 
   return ranges;
 }

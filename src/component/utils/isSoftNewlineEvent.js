@@ -6,20 +6,20 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule isSoftNewlineEvent
- * @typechecks
- * @flow
+ * @format
+ * @flow strict-local
  */
 
 'use strict';
 
-var Keys = require('Keys');
+const Keys = require('Keys');
 
 function isSoftNewlineEvent(e: SyntheticKeyboardEvent<>): boolean {
-  return e.which === Keys.RETURN && (
-    e.getModifierState('Shift') ||
-    e.getModifierState('Alt') ||
-    e.getModifierState('Control')
+  return (
+    e.which === Keys.RETURN &&
+    (e.getModifierState('Shift') ||
+      e.getModifierState('Alt') ||
+      e.getModifierState('Control'))
   );
 }
 

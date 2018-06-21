@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule DraftEditorCompositionHandler
- * @flow
+ * @format
+ * @flow strict-local
  */
 
 'use strict';
@@ -20,6 +20,8 @@ const EditorState = require('EditorState');
 const Keys = require('Keys');
 
 const getEntityKeyForSelection = require('getEntityKeyForSelection');
+const gkx = require('gkx');
+const isEventHandled = require('isEventHandled');
 const isSelectionAtLeafStart = require('isSelectionAtLeafStart');
 
 /**
@@ -47,7 +49,7 @@ let beforeInputData = null;
 let compositionUpdateData = null;
 let compositionEndData = null;
 
-var DraftEditorCompositionHandler = {
+const DraftEditorCompositionHandler = {
   /**
    * Some IMEs (Firefox Mobile, notably) fire multiple `beforeinput` events
    * which include the text so far typed, in addition to (broken)
@@ -112,7 +114,7 @@ var DraftEditorCompositionHandler = {
     }
     setTimeout(() => {
       if (!resolved) {
-        DraftEditorCompositionHandler.resolveComposition(editor);
+        DraftEditorCompositionHandler.resolveComposition(editor, e);
       }
     }, RESOLVE_DELAY);
   },
@@ -128,7 +130,7 @@ var DraftEditorCompositionHandler = {
       // 20ms timer expires (ex: type option-E then backspace, or type A then
       // backspace in 2-Set Korean), we should immediately resolve the
       // composition and reinterpret the key press in edit mode.
-      DraftEditorCompositionHandler.resolveComposition(editor);
+      DraftEditorCompositionHandler.resolveComposition(editor, e);
       editor._onKeyDown(e);
       return;
     }
@@ -191,7 +193,10 @@ var DraftEditorCompositionHandler = {
    * Resetting innerHTML will move focus to the beginning of the editor,
    * so we update to force it back to the correct place.
    */
-  resolveComposition: function(editor: DraftEditor): void {
+  resolveComposition: function(
+    editor: DraftEditor,
+    event: SyntheticEvent<>,
+  ): void {
     if (stillComposing) {
       return;
     }
@@ -219,12 +224,11 @@ var DraftEditorCompositionHandler = {
       editorState.getSelection(),
     );
 
-    const mustReset = (
+    const mustReset =
       !composedChars ||
       isSelectionAtLeafStart(editorState) ||
       currentStyle.size > 0 ||
-      entityKey !== null
-    );
+      entityKey !== null;
 
     if (mustReset) {
       editor.restoreEditorDOM();
@@ -233,6 +237,19 @@ var DraftEditorCompositionHandler = {
     editor.exitCurrentMode();
 
     if (composedChars) {
+      if (
+        gkx('draft_handlebeforeinput_composed_text') &&
+        editor.props.handleBeforeInput &&
+        isEventHandled(
+          editor.props.handleBeforeInput(
+            composedChars,
+            editorState,
+            event.timeStamp,
+          ),
+        )
+      ) {
+        return;
+      }
       // If characters have been composed, re-rendering with the update
       // is sufficient to reset the editor.
       const contentState = DraftModifier.replaceText(
@@ -243,11 +260,7 @@ var DraftEditorCompositionHandler = {
         entityKey,
       );
       editor.update(
-        EditorState.push(
-          editorState,
-          contentState,
-          'insert-characters',
-        ),
+        EditorState.push(editorState, contentState, 'insert-characters'),
       );
       return;
     }

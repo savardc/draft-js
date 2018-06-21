@@ -6,9 +6,8 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule applyEntityToContentState
- * @typechecks
- * @flow
+ * @format
+ * @flow strict-local
  */
 
 'use strict';
@@ -16,9 +15,9 @@
 import type ContentState from 'ContentState';
 import type SelectionState from 'SelectionState';
 
-var Immutable = require('immutable');
+const Immutable = require('immutable');
 
-var applyEntityToContentBlock = require('applyEntityToContentBlock');
+const applyEntityToContentBlock = require('applyEntityToContentBlock');
 
 function applyEntityToContentState(
   contentState: ContentState,
@@ -39,12 +38,7 @@ function applyEntityToContentState(
     .map((block, blockKey) => {
       const sliceStart = blockKey === startKey ? startOffset : 0;
       const sliceEnd = blockKey === endKey ? endOffset : block.getLength();
-      return applyEntityToContentBlock(
-        block,
-        sliceStart,
-        sliceEnd,
-        entityKey,
-      );
+      return applyEntityToContentBlock(block, sliceStart, sliceEnd, entityKey);
     });
 
   return contentState.merge({

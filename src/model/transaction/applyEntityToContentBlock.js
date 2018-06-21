@@ -6,24 +6,23 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule applyEntityToContentBlock
- * @typechecks
+ * @format
  * @flow
  */
 
 'use strict';
 
-import type ContentBlock from 'ContentBlock';
+import type {BlockNodeRecord} from 'BlockNodeRecord';
 
-var CharacterMetadata = require('CharacterMetadata');
+const CharacterMetadata = require('CharacterMetadata');
 
 function applyEntityToContentBlock(
-  contentBlock: ContentBlock,
+  contentBlock: BlockNodeRecord,
   start: number,
   end: number,
   entityKey: ?string,
-): ContentBlock {
-  var characterList = contentBlock.getCharacterList();
+): BlockNodeRecord {
+  let characterList = contentBlock.getCharacterList();
   while (start < end) {
     characterList = characterList.set(
       start,

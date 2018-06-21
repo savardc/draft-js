@@ -6,33 +6,29 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule BlockTree
+ * @format
  * @flow
  */
 
 'use strict';
 
+import type {BlockNodeRecord} from 'BlockNodeRecord';
 import type CharacterMetadata from 'CharacterMetadata';
-import type ContentBlock from 'ContentBlock';
 import type ContentState from 'ContentState';
 import type {DraftDecoratorType} from 'DraftDecoratorType';
 
-var Immutable = require('immutable');
+const Immutable = require('immutable');
 
-var emptyFunction = require('emptyFunction');
-var findRangesImmutable = require('findRangesImmutable');
+const emptyFunction = require('emptyFunction');
+const findRangesImmutable = require('findRangesImmutable');
 
-var {
-  List,
-  Repeat,
-  Record,
-} = Immutable;
+const {List, Repeat, Record} = Immutable;
 
-var returnTrue = emptyFunction.thatReturnsTrue;
+const returnTrue = emptyFunction.thatReturnsTrue;
 
-var FINGERPRINT_DELIMITER = '-';
+const FINGERPRINT_DELIMITER = '-';
 
-var defaultLeafRange: {
+const defaultLeafRange: {
   start: ?number,
   end: ?number,
 } = {
@@ -40,9 +36,9 @@ var defaultLeafRange: {
   end: null,
 };
 
-var LeafRange = Record(defaultLeafRange);
+const LeafRange = Record(defaultLeafRange);
 
-var defaultDecoratorRange: {
+const defaultDecoratorRange: {
   start: ?number,
   end: ?number,
   decoratorKey: ?string,
@@ -54,75 +50,48 @@ var defaultDecoratorRange: {
   leaves: null,
 };
 
-var DecoratorRange = Record(defaultDecoratorRange);
+const DecoratorRange = Record(defaultDecoratorRange);
 
-var BlockTree = {
+const BlockTree = {
   /**
    * Generate a block tree for a given ContentBlock/decorator pair.
    */
   generate: function(
     contentState: ContentState,
-    block: ContentBlock,
+    block: BlockNodeRecord,
     decorator: ?DraftDecoratorType,
   ): List<DecoratorRange> {
-    var textLength = block.getLength();
+    const textLength = block.getLength();
     if (!textLength) {
       return List.of(
         new DecoratorRange({
           start: 0,
           end: 0,
           decoratorKey: null,
-          leaves: List.of(
-            new LeafRange({start: 0, end: 0}),
-          ),
+          leaves: List.of(new LeafRange({start: 0, end: 0})),
         }),
       );
     }
 
-    var leafSets = [];
-    var decorations = decorator ?
-      decorator.getDecorations(block, contentState) :
-      List(Repeat(null, textLength));
+    const leafSets = [];
+    const decorations = decorator
+      ? decorator.getDecorations(block, contentState)
+      : List(Repeat(null, textLength));
 
-    var chars = block.getCharacterList();
+    const chars = block.getCharacterList();
 
-    findRangesImmutable(
-      decorations,
-      areEqual,
-      returnTrue,
-      (start, end) => {
-        leafSets.push(
-          new DecoratorRange({
-            start,
-            end,
-            decoratorKey: decorations.get(start),
-            leaves: generateLeaves(
-              chars.slice(start, end).toList(),
-              start,
-            ),
-          }),
-        );
-      },
-    );
+    findRangesImmutable(decorations, areEqual, returnTrue, (start, end) => {
+      leafSets.push(
+        new DecoratorRange({
+          start,
+          end,
+          decoratorKey: decorations.get(start),
+          leaves: generateLeaves(chars.slice(start, end).toList(), start),
+        }),
+      );
+    });
 
     return List(leafSets);
-  },
-
-  /**
-   * Create a string representation of the given tree map. This allows us
-   * to rapidly determine whether a tree has undergone a significant
-   * structural change.
-   */
-  getFingerprint: function(tree: List<DecoratorRange>): string {
-    return tree.map(
-      leafSet => {
-        var decoratorKey = leafSet.get('decoratorKey');
-        var fingerprintString = decoratorKey !== null ?
-          decoratorKey + '.' + (leafSet.get('end') - leafSet.get('start')) :
-          '';
-        return '' + fingerprintString + '.' + leafSet.get('leaves').size;
-      },
-    ).join(FINGERPRINT_DELIMITER);
   },
 };
 
@@ -133,21 +102,16 @@ function generateLeaves(
   characters: List<CharacterMetadata>,
   offset: number,
 ): List<LeafRange> {
-  var leaves = [];
-  var inlineStyles = characters.map(c => c.getStyle()).toList();
-  findRangesImmutable(
-    inlineStyles,
-    areEqual,
-    returnTrue,
-    (start, end) => {
-      leaves.push(
-        new LeafRange({
-          start: start + offset,
-          end: end + offset,
-        }),
-      );
-    },
-  );
+  const leaves = [];
+  const inlineStyles = characters.map(c => c.getStyle()).toList();
+  findRangesImmutable(inlineStyles, areEqual, returnTrue, (start, end) => {
+    leaves.push(
+      new LeafRange({
+        start: start + offset,
+        end: end + offset,
+      }),
+    );
+  });
   return List(leaves);
 }
 

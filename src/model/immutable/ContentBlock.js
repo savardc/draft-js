@@ -6,37 +6,26 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ContentBlock
+ * @format
  * @flow
  */
 
 'use strict';
 
-import type CharacterMetadata from 'CharacterMetadata';
+import type {BlockNode, BlockNodeConfig, BlockNodeKey} from 'BlockNode';
 import type {DraftBlockType} from 'DraftBlockType';
 import type {DraftInlineStyle} from 'DraftInlineStyle';
 
-var Immutable = require('immutable');
+const CharacterMetadata = require('CharacterMetadata');
+const Immutable = require('immutable');
 
-var findRangesImmutable = require('findRangesImmutable');
+const findRangesImmutable = require('findRangesImmutable');
 
-var {
-  List,
-  Map,
-  OrderedSet,
-  Record,
-} = Immutable;
+const {List, Map, OrderedSet, Record, Repeat} = Immutable;
 
 const EMPTY_SET = OrderedSet();
 
-var defaultRecord: {
-  key: string,
-  type: DraftBlockType,
-  text: string,
-  characterList: List<CharacterMetadata>,
-  depth: number,
-  data: Map<any, any>,
-} = {
+const defaultRecord: BlockNodeConfig = {
   key: '',
   type: 'unstyled',
   text: '',
@@ -45,10 +34,28 @@ var defaultRecord: {
   data: Map(),
 };
 
-var ContentBlockRecord = Record(defaultRecord);
+const ContentBlockRecord = Record(defaultRecord);
 
-class ContentBlock extends ContentBlockRecord {
-  getKey(): string {
+const decorateCharacterList = (config: BlockNodeConfig): BlockNodeConfig => {
+  if (!config) {
+    return config;
+  }
+
+  const {characterList, text} = config;
+
+  if (text && !characterList) {
+    config.characterList = List(Repeat(CharacterMetadata.EMPTY, text.length));
+  }
+
+  return config;
+};
+
+class ContentBlock extends ContentBlockRecord implements BlockNode {
+  constructor(config: BlockNodeConfig) {
+    super(decorateCharacterList(config));
+  }
+
+  getKey(): BlockNodeKey {
     return this.get('key');
   }
 
@@ -77,12 +84,12 @@ class ContentBlock extends ContentBlockRecord {
   }
 
   getInlineStyleAt(offset: number): DraftInlineStyle {
-    var character = this.getCharacterList().get(offset);
+    const character = this.getCharacterList().get(offset);
     return character ? character.getStyle() : EMPTY_SET;
   }
 
   getEntityAt(offset: number): ?string {
-    var character = this.getCharacterList().get(offset);
+    const character = this.getCharacterList().get(offset);
     return character ? character.getEntity() : null;
   }
 

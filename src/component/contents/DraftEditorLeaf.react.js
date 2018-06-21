@@ -6,27 +6,26 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule DraftEditorLeaf.react
- * @typechecks
+ * @format
  * @flow
  */
 
 'use strict';
 
+import type {BlockNodeRecord} from 'BlockNodeRecord';
 import type {DraftInlineStyle} from 'DraftInlineStyle';
 import type SelectionState from 'SelectionState';
 
-var ContentBlock = require('ContentBlock');
 const DraftEditorTextNode = require('DraftEditorTextNode.react');
-var React = require('React');
-var ReactDOM = require('ReactDOM');
+const React = require('React');
+const ReactDOM = require('ReactDOM');
 
 const invariant = require('invariant');
-var setDraftEditorSelection = require('setDraftEditorSelection');
+const setDraftEditorSelection = require('setDraftEditorSelection');
 
 type Props = {
   // The block that contains this leaf.
-  block: ContentBlock,
+  block: BlockNodeRecord,
 
   // Mapping of style names to CSS declarations.
   customStyleMap: Object,
@@ -44,7 +43,7 @@ type Props = {
 
   // The current `SelectionState`, used to represent a selection range in the
   // editor
-  selection: SelectionState,
+  selection: ?SelectionState,
 
   // The offset of this string within its block.
   start: number,
@@ -75,6 +74,9 @@ class DraftEditorLeaf extends React.Component<Props> {
    * DOM structure of the DraftEditor component. If leaves had multiple
    * text nodes, this would be harder.
    */
+
+  leaf: ?HTMLElement;
+
   _setSelection(): void {
     const {selection} = this.props;
 
@@ -112,13 +114,13 @@ class DraftEditorLeaf extends React.Component<Props> {
   }
 
   shouldComponentUpdate(nextProps: Props): boolean {
-    const leafNode = ReactDOM.findDOMNode(this.refs.leaf);
+    const leafNode = ReactDOM.findDOMNode(this.leaf);
     invariant(leafNode, 'Missing leafNode');
-    return (
+    const shouldUpdate =
       leafNode.textContent !== nextProps.text ||
       nextProps.styleSet !== this.props.styleSet ||
-      nextProps.forceSelection
-    );
+      nextProps.forceSelection;
+    return shouldUpdate;
   }
 
   componentDidUpdate(): void {
@@ -146,13 +148,11 @@ class DraftEditorLeaf extends React.Component<Props> {
       const mergedStyles = {};
       const style = customStyleMap[styleName];
 
-      if (
-        style !== undefined &&
-        map.textDecoration !== style.textDecoration
-      ) {
+      if (style !== undefined && map.textDecoration !== style.textDecoration) {
         // .trim() is necessary for IE9/10/11 and Edge
-        mergedStyles.textDecoration =
-          [map.textDecoration, style.textDecoration].join(' ').trim();
+        mergedStyles.textDecoration = [map.textDecoration, style.textDecoration]
+          .join(' ')
+          .trim();
       }
 
       return Object.assign(map, style, mergedStyles);
@@ -166,7 +166,7 @@ class DraftEditorLeaf extends React.Component<Props> {
     return (
       <span
         data-offset-key={offsetKey}
-        ref="leaf"
+        ref={ref => (this.leaf = ref)}
         style={styleObj}>
         <DraftEditorTextNode>{text}</DraftEditorTextNode>
       </span>
